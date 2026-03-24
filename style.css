@@ -130,3 +130,6 @@ tr:hover {
 .module_content h2{
   font-size: 30px;
 }
+.navbar-brand{
+    margin-left: auto;
+}

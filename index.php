@@ -15,23 +15,26 @@ if (isset($_POST['add'])) {
     $title = $_POST['title'];
     $amount = $_POST['amount'];
     $date = !empty($_POST['date']) ? $_POST['date'] : date('Y-m-d');
+    $category = $_POST['category']; 
 
-    mysqli_query($conn,"INSERT INTO expenses (title,amount,date,user_id)
-    VALUES ('$title','$amount','$date','$user_id')");
+    mysqli_query($conn,"INSERT INTO expenses (title, amount, date, user_id, category)
+    VALUES ('$title','$amount','$date','$user_id','$category')");
 }
 
 if (isset($_POST['update'])) {
 
-$id = $_POST['edit_id'];
-$title = $_POST['edit_title'];
-$amount = $_POST['edit_amount'];
-$date = $_POST['edit_date'];
+    $id = $_POST['edit_id'];
+    $title = $_POST['edit_title'];
+    $amount = $_POST['edit_amount'];
+    $date = $_POST['edit_date'];
+    $category = $_POST['edit_category'];
 
-mysqli_query($conn,"UPDATE expenses SET
-title='$title',
-amount='$amount',
-date='$date'
-WHERE id=$id AND user_id=$user_id");
+    mysqli_query($conn,"UPDATE expenses SET
+    title='$title',
+    amount='$amount',
+    date='$date',
+    category='$category'
+    WHERE id=$id AND user_id=$user_id");
 }
 
 if (isset($_GET['delete'])) {
@@ -48,12 +51,23 @@ $totalRow = mysqli_fetch_assoc(mysqli_query($conn,
 
 $total = $totalRow['total'] ?? 0;
 
-
 function isArabic($text){
     return preg_match('/[\x{0600}-\x{06FF}]/u',$text);
 }
 
 $welcome = isArabic($name) ? " أهلا👋" : "👋Welcome";
+
+function categoryArabic($cat){
+    $map = [
+        'food'=>'طعام',
+        'transport'=>'مواصلات',
+        'shopping'=>'تسوق',
+        'entertainment'=>'ترفيه',
+        'others'=>'أخرى'
+    ];
+    return $map[$cat] ?? $cat;
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -92,16 +106,27 @@ text-align: right;
 
 <form method="POST" class="row g-2">
 
-<div class="col-md-4">
+<div class="col-md-3">
 <input type="text" name="title" class="form-control" placeholder="اسم المصروف" required>
 </div>
 
-<div class="col-md-3">
+<div class="col-md-2">
 <input type="number" step="0.01" name="amount" class="form-control" placeholder="المبلغ" required>
 </div>
 
 <div class="col-md-3">
 <input type="date" name="date" class="form-control">
+</div>
+
+<div class="col-md-2">
+<select name="category" class="form-select" required>
+    <option value="">-- اختر الفئة --</option>
+    <option value="food">طعام</option>
+    <option value="transport">مواصلات</option>
+    <option value="shopping">تسوق</option>
+    <option value="entertainment">ترفيه</option>
+    <option value="others">أخرى</option>
+</select>
 </div>
 
 <div class="col-md-2 d-grid">
@@ -123,6 +148,7 @@ text-align: right;
 <th>العنوان</th>
 <th>المبلغ</th>
 <th>التاريخ</th>
+<th>الفئة</th>
 <th>تعديل</th>
 <th>حذف</th>
 </tr>
@@ -136,6 +162,7 @@ echo "<tr>
 <td>{$row['title']}</td>
 <td>{$row['amount']}</td>
 <td>{$row['date']}</td>
+<td>".categoryArabic($row['category'])."</td>
 
 <td>
 <button class='btn btn-warning btn-sm'
@@ -180,8 +207,16 @@ value='{$row['amount']}' required>
 
 <input type='date'
 name='edit_date'
-class='form-control'
+class='form-control mb-2'
 value='{$row['date']}'>
+
+<select name='edit_category' class='form-select'>
+    <option value='food' ".($row['category']=='food'?'selected':'').">طعام</option>
+    <option value='transport' ".($row['category']=='transport'?'selected':'').">مواصلات</option>
+    <option value='shopping' ".($row['category']=='shopping'?'selected':'').">تسوق</option>
+    <option value='entertainment' ".($row['category']=='entertainment'?'selected':'').">ترفيه</option>
+    <option value='others' ".($row['category']=='others'?'selected':'').">أخرى</option>
+</select>
 
 </div>
 
@@ -195,8 +230,7 @@ value='{$row['date']}'>
 
 </div>
 </div>
-</div>
-";
+</div>";
 
 $i++;
 }
@@ -208,7 +242,7 @@ $i++;
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js">
+</script>
 </body>
 </html>
