@@ -31,7 +31,7 @@ $dataJSON = json_encode($data);
 ?>
 
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,14 +40,28 @@ $dataJSON = json_encode($data);
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>body{font-family:'Cairo',sans-serif;background-color:#f8f9fa;}</style>
+<style>
+body{
+  font-family:'Cairo',sans-serif;
+  background-color:#f8f9fa;
+  direction: rtl;
+}
+.text-ar{
+  text-align: right;
+  direction: rtl;
+}
+.text-en{
+  text-align: left;
+  direction: ltr;
+}
+</style>
 </head>
 <body>
 
 <?php include "navbar.php"; ?>
 
 <div class="container mt-4">
-  <h1 class="mb-4">Dashboard</h1>
+  <h1 class="mb-4 text-en">Dashboard</h1>
 
   <div class="row mb-4">
     <div class="col-12 col-md-6 mb-3">
@@ -71,7 +85,7 @@ $dataJSON = json_encode($data);
   <div class="card shadow-sm mb-4">
     <div class="card-header bg-primary text-white">آخر المصروفات</div>
     <div class="card-body table-responsive">
-      <table class="table table-striped table-hover table-bordered mb-0">
+      <table class="table table-striped mb-0 text-end">
         <thead>
           <tr>
             <th>عدد الاصناف</th>
@@ -135,7 +149,14 @@ const expensesChart = new Chart(ctx, {
             borderWidth: 1
         }]
     },
-    options: { responsive: true, plugins: { legend: { display: false }, title: { display: true, text: 'توزيع المصروفات حسب العنوان' } }, scales: { y: { beginAtZero: true } } }
+    options: { 
+        responsive: true, 
+        plugins: { 
+            legend: { display: false }, 
+            title: { display: true, text: 'توزيع المصروفات حسب العنوان' } 
+        }, 
+        scales: { y: { beginAtZero: true } } 
+    }
 });
 </script>
 

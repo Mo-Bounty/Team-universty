@@ -27,8 +27,7 @@ if (isset($_POST['update'])) {
     $date = $_POST['date'];
 
     mysqli_query($conn, "UPDATE expenses SET title='$title', amount='$amount', date='$date' WHERE id=$id AND user_id=$user_id");
-    $message = "تم تحديث المصروف بنجاح!";
-    header("Location: index.php"); // إعادة التوجيه للصفحة الرئيسية بعد التحديث
+    header("Location: index.php");
     exit();
 }
 ?>
@@ -43,7 +42,6 @@ if (isset($_POST['update'])) {
 <style>body{font-family:'Cairo',sans-serif;}</style>
 </head>
 <body class="p-4">
-
 <div class="container" style="max-width: 500px;">
     <h2>تعديل المصروف</h2>
     <?php if($message) echo "<div class='alert alert-success'>$message</div>"; ?>
@@ -64,7 +62,6 @@ if (isset($_POST['update'])) {
         <a href="index.php" class="btn btn-secondary">إلغاء</a>
     </form>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
