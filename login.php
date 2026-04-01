@@ -29,9 +29,9 @@ if (isset($_POST['login'])) {
 <head>
 <meta charset="UTF-8">
 <title>تسجيل الدخول</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="loginandregister.css">
 </head>
-<body>
+<body class="login-page">
 <div class="container">
 <h2>تسجيل الدخول</h2>
 

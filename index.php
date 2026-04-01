@@ -92,7 +92,7 @@ body{
 <?php include "navbar.php"; ?>
 
 <div class="container mt-4">
-<h3 class="mb-3">أهلاً 👋 <?php echo $name; ?></h3>
+<!-- <h3 class="mb-3">أهلاً 👋 <?php echo $name; ?></h3> -->
 <h2 class="text-center mb-4"><?php echo $welcome." ".$name; ?></h2>
 
 <div class="card shadow p-3 mb-4">

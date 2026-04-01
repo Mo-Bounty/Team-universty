@@ -1,0 +1,72 @@
+/* خلفية الصفحة */
+body.login-page {
+    font-family: 'Cairo', sans-serif;
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* الكارد */
+.login-page .container {
+    background: #fff;
+    padding: 40px 30px;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    text-align: center;
+}
+
+/* العنوان */
+.login-page h2 {
+    margin-bottom: 25px;
+    color: #2c3e50;
+}
+
+/* الحقول */
+.login-page input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    transition: 0.3s;
+}
+
+.login-page input:focus {
+    border-color: #4facfe;
+    box-shadow: 0 0 5px rgba(79,172,254,0.5);
+    outline: none;
+}
+
+/* الزر */
+.login-page button {
+    width: 100%;
+    padding: 12px;
+    background: #27ae60;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.login-page button:hover {
+    background: #219150;
+}
+
+/* اللينك */
+.login-page a {
+    display: block;
+    margin-top: 15px;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.login-page a:hover {
+    text-decoration: underline;
+}
