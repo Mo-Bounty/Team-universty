@@ -92,7 +92,6 @@ body{
 <?php include "navbar.php"; ?>
 
 <div class="container mt-4">
-<!-- <h3 class="mb-3">أهلاً 👋 <?php echo $name; ?></h3> -->
 <h2 class="text-center mb-4"><?php echo $welcome." ".$name; ?></h2>
 
 <div class="card shadow p-3 mb-4">
@@ -148,8 +147,8 @@ while($row=mysqli_fetch_assoc($result)){
     <td>{$row['title']}</td>
     <td>{$row['amount']}</td>
     <td>{$row['date']}</td>
-    <td>".categoryArabic($row['category'])."</td>
-    <td>
+    <td>".categoryArabic($row['category'] ?? 'others')."</td>   
+     <td>
         <button class='btn btn-warning btn-sm' data-bs-toggle='modal' data-bs-target='#editModal{$row['id']}'>تعديل</button>
     </td>
     <td>
