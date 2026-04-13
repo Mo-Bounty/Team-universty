@@ -25,25 +25,55 @@ if (isset($_POST['login'])) {
 ?>
 
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>تسجيل الدخول</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="loginandregister.css">
+
 </head>
 <body class="login-page">
+
 <div class="container">
 <h2>تسجيل الدخول</h2>
 
 <?php if(isset($error)) echo "<div class='error'>$error</div>"; ?>
 
 <form method="POST">
-<input type="email" name="email" placeholder="البريد الإلكتروني" required>
-<input type="password" name="password" placeholder="كلمة المرور" required>
-<button type="submit" name="login">دخول</button>
+
+    <div class="input-group">
+        <span class="icon">📧</span>
+        <input type="email" name="email" placeholder="البريد الإلكتروني" required>
+    </div>
+
+    <div class="input-group">
+        <span class="toggle-password" onclick="togglePassword(this)">🔒</span>
+        <input type="password" id="password" name="password" placeholder="كلمة المرور" required>
+    </div>
+
+    <button type="submit" name="login">دخول</button>
+
 </form>
 
 <a href="register.php">إنشاء حساب جديد</a>
+
 </div>
+
+<script>
+function togglePassword(icon) {
+    let password = document.getElementById("password");
+    if (password.type === "password") {
+        password.type = "text";
+        icon.textContent = "🔓";
+    } else {
+        password.type = "password";
+        icon.textContent = "🔒";
+    }
+}
+</script>
+
 </body>
 </html>

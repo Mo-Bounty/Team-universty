@@ -8,26 +8,105 @@ include "db.php";
 
 $user_id = $_SESSION['user_id'];
 
-// جلب بيانات المصروفات
-$result = mysqli_query($conn, "SELECT * FROM expenses WHERE user_id = $user_id ORDER BY id DESC");
-$totalResult = mysqli_query($conn, "SELECT SUM(amount) as total FROM expenses WHERE user_id = $user_id");
-$totalRow = mysqli_fetch_assoc($totalResult);
-$total = $totalRow['total'] ?? 0;
+// --- بيانات إجمالي المصروفات لكل سنة ---
+$totalByYearQuery = mysqli_query($conn,"
+    SELECT YEAR(date) as year, SUM(amount) as total
+    FROM expenses
+    WHERE user_id = $user_id
+    GROUP BY year
+    ORDER BY year DESC
+");
 
-// عدد المصروفات
-$result_count = mysqli_query($conn, "SELECT COUNT(*) AS count FROM expenses WHERE user_id = $user_id");
-$count = mysqli_fetch_assoc($result_count)['count'];
+// --- عدد المصروفات لكل سنة ---
+$countByYearQuery = mysqli_query($conn,"
+    SELECT YEAR(date) as year, COUNT(*) as count
+    FROM expenses
+    WHERE user_id = $user_id
+    GROUP BY year
+    ORDER BY year DESC
+");
 
-// بيانات الرسم البياني
-$chartQuery = mysqli_query($conn, "SELECT title, SUM(amount) as total_amount FROM expenses WHERE user_id = $user_id GROUP BY title");
-$labels = [];
-$data = [];
-while($row = mysqli_fetch_assoc($chartQuery)) {
-    $labels[] = $row['title'];
-    $data[] = $row['total_amount'];
+// --- آخر المصروفات لكل سنة ---
+$latestByYearQuery = mysqli_query($conn,"
+    SELECT *
+    FROM expenses
+    WHERE user_id = $user_id
+    ORDER BY date DESC
+");
+
+// --- بيانات الرسم البياني لكل سنة+شهر+فئة ---
+$chartQuery = mysqli_query($conn, "
+    SELECT YEAR(date) as year, MONTH(date) as month, category, SUM(amount) as total_amount
+    FROM expenses
+    WHERE user_id = $user_id
+    GROUP BY year, month, category
+    ORDER BY year, month
+");
+
+//  تحويل الفئة إلى عربى
+function categoryArabic($cat){
+    $map = [
+        'food'=>'طعام',
+        'transport'=>'مواصلات',
+        'shopping'=>'تسوق',
+        'entertainment'=>'ترفيه',
+        'bills'=>'فواتير',
+        'others'=>'أخرى'
+    ];
+    return $map[$cat] ?? $cat;
 }
+
+//   الرسم البياني
+$chartData = [];
+$categories = [];
+while($row = mysqli_fetch_assoc($chartQuery)){
+    $year = $row['year'];
+    $month = $row['month'];
+    $category = $row['category'];
+    $amount = $row['total_amount'];
+
+    $chartData[$year][$month][$category] = $amount;
+    if(!in_array($category, $categories)){
+        $categories[] = $category;
+    }
+}
+
+// ألوان لكل فئة
+$categoryColors = [
+    'food'=>'rgba(255, 99, 132, 0.6)',
+    'transport'=>'rgba(54, 162, 235, 0.6)',
+    'shopping'=>'rgba(255, 206, 86, 0.6)',
+    'entertainment'=>'rgba(75, 192, 192, 0.6)',
+    'bills'=>'rgba(153, 102, 255, 0.6)',
+    'others'=>'rgba(255, 159, 64, 0.6)'
+];
+
+//  labels لكل سنة-شهر
+$labels = [];
+foreach($chartData as $year => $months){
+    foreach($months as $month => $cats){
+        $labels[] = "$year-$month";
+    }
+}
+
+//  datasets لكل فئة
+$datasets = [];
+foreach($categories as $cat){
+    $data = [];
+    foreach($chartData as $year => $months){
+        foreach($months as $month => $cats){
+            $data[] = $cats[$cat] ?? 0;
+        }
+    }
+    $datasets[] = [
+        'label' => categoryArabic($cat),
+        'data' => $data,
+        'backgroundColor' => $categoryColors[$cat] ?? 'rgba(200,200,200,0.6)'
+    ];
+}
+
 $labelsJSON = json_encode($labels);
-$dataJSON = json_encode($data);
+$datasetsJSON = json_encode($datasets);
 ?>
 
 <!DOCTYPE html>
@@ -48,11 +127,6 @@ body{
 }
 .text-ar{
   text-align: right;
-  direction: rtl;
-}
-.text-en{
-  text-align: left;
-  direction: ltr;
 }
 </style>
 </head>
@@ -61,64 +135,92 @@ body{
 <?php include "navbar.php"; ?>
 
 <div class="container mt-4">
-  <h1 class="mb-4 text-en">Dashboard</h1>
+<h1 class="mb-4 text-en" style="text-align: left;">Dashboard</h1>
 
-  <div class="row mb-4">
-    <div class="col-12 col-md-6 mb-3">
-      <div class="card text-white bg-success shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">إجمالي المصروفات</h5>
-          <p class="card-text fs-3"><?php echo number_format($total, 2); ?> جنيه</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-md-6 mb-3">
-      <div class="card text-white bg-info shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">عدد المصروفات</h5>
-          <p class="card-text fs-3"><?php echo $count; ?></p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card shadow-sm mb-4">
-    <div class="card-header bg-primary text-white">آخر المصروفات</div>
+<!-- جدول إجمالي المصروفات لكل سنة -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-success text-white">إجمالي المصروفات لكل سنة</div>
     <div class="card-body table-responsive">
-      <table class="table table-striped mb-0 text-end">
-        <thead>
-          <tr>
-            <th>عدد الاصناف</th>
-            <th>اسم المصروف</th>
-            <th>المبلغ</th>
-            <th>التاريخ</th>
-            <th>أفعال</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php
-          $i = 1;
-          while($row = mysqli_fetch_assoc($result)) {
-              echo "<tr>
-                      <td>{$i}</td>
-                      <td>{$row['title']}</td>
-                      <td>{$row['amount']}</td>
-                      <td>{$row['date']}</td>
-                      <td>
-                        <a href='edit.php?id={$row['id']}' class='btn btn-sm btn-warning mb-1'>تعديل</a>
-                        <a href='?delete={$row['id']}' class='btn btn-sm btn-danger mb-1'>حذف</a>
-                      </td>
-                    </tr>";
-              $i++;
-          }
-          ?>
-        </tbody>
-      </table>
+        <table class="table table-striped text-end mb-0">
+            <thead>
+                <tr>
+                    <th>السنة</th>
+                    <th>إجمالي المصروفات</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while($row = mysqli_fetch_assoc($totalByYearQuery)): ?>
+                <tr>
+                    <td><?= $row['year'] ?></td>
+                    <td><?= number_format($row['total'],2) ?> جنيه</td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
     </div>
-  </div>
+</div>
 
-  <h2 class="mt-5">📊 توزيع المصروفات حسب العنوان</h2>
-  <canvas id="expensesChart" width="400" height="200"></canvas>
+<!-- جدول عدد المصروفات لكل سنة -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-info text-white">عدد المصروفات لكل سنة</div>
+    <div class="card-body table-responsive">
+        <table class="table table-striped text-end mb-0">
+            <thead>
+                <tr>
+                    <th>السنة</th>
+                    <th>عدد المصروفات</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while($row = mysqli_fetch_assoc($countByYearQuery)): ?>
+                <tr>
+                    <td><?= $row['year'] ?></td>
+                    <td><?= $row['count'] ?></td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- جدول آخر المصروفات لكل سنة -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-primary text-white">آخر المصروفات لكل سنة</div>
+    <div class="card-body table-responsive">
+        <table class="table table-striped text-end mb-0">
+            <thead>
+                <tr>
+                    <th>السنة</th>
+                    <th>اسم المصروف</th>
+                    <th>المبلغ</th>
+                    <th>التاريخ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $lastYear = null;
+                while($row = mysqli_fetch_assoc($latestByYearQuery)):
+                    $year = date('Y', strtotime($row['date']));
+                    if($year != $lastYear){
+                        $lastYear = $year;
+                ?>
+                <tr>
+                    <td><?= $year ?></td>
+                    <td><?= $row['title'] ?></td>
+                    <td><?= $row['amount'] ?></td>
+                    <td><?= $row['date'] ?></td>
+                </tr>
+                <?php
+                    }
+                endwhile;
+                ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<h2 class="mt-5">📊 المصروفات حسب السنة والشهر والفئة</h2>
+<canvas id="expensesChart" width="400" height="200"></canvas>
 </div>
 
 <script>
@@ -127,35 +229,35 @@ const expensesChart = new Chart(ctx, {
     type: 'bar',
     data: {
         labels: <?php echo $labelsJSON; ?>,
-        datasets: [{
-            label: 'المبلغ بالجنيه',
-            data: <?php echo $dataJSON; ?>,
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.6)',
-                'rgba(54, 162, 235, 0.6)',
-                'rgba(255, 206, 86, 0.6)',
-                'rgba(75, 192, 192, 0.6)',
-                'rgba(153, 102, 255, 0.6)',
-                'rgba(255, 159, 64, 0.6)'
-            ],
-            borderColor: [
-                'rgba(255, 99, 132, 1)',
-                'rgba(54, 162, 235, 1)',
-                'rgba(255, 206, 86, 1)',
-                'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)',
-                'rgba(255, 159, 64, 1)'
-            ],
-            borderWidth: 1
-        }]
+        datasets: <?php echo $datasetsJSON; ?>
     },
-    options: { 
-        responsive: true, 
-        plugins: { 
-            legend: { display: false }, 
-            title: { display: true, text: 'توزيع المصروفات حسب العنوان' } 
-        }, 
-        scales: { y: { beginAtZero: true } } 
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'المصروفات حسب السنة والشهر والفئة'
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                    label: function(context){
+                        return context.dataset.label + ': ' + context.raw + ' جنيه';
+                    },
+                    title: function(context){
+                        return 'السنة والشهر: ' + context[0].label;
+                    }
+                }
+            },
+            legend: {
+                position: 'bottom'
+            }
+        },
+        scales: {
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true }
+        }
     }
 });
 </script>
