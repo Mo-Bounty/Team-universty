@@ -43,9 +43,21 @@ $allYearsRes = mysqli_query($conn,"SELECT DISTINCT YEAR(date) as year FROM expen
 $allYears = [];
 while($r = mysqli_fetch_assoc($allYearsRes)) $allYears[] = $r['year'];
 
-$allMonthsRes = mysqli_query($conn,"SELECT DISTINCT DATE_FORMAT(date,'%Y-%m') as month FROM expenses WHERE user_id=$user_id ORDER BY month DESC");
-$allMonths = [];
-while($r = mysqli_fetch_assoc($allMonthsRes)) $allMonths[] = $r['month'];
+/* ✅ التعديل هنا فقط (بدل ما كان بيجيب من الداتا) */
+$allMonths = [
+    '01'=>'يناير',
+    '02'=>'فبراير',
+    '03'=>'مارس',
+    '04'=>'أبريل',
+    '05'=>'مايو',
+    '06'=>'يونيو',
+    '07'=>'يوليو',
+    '08'=>'أغسطس',
+    '09'=>'سبتمبر',
+    '10'=>'أكتوبر',
+    '11'=>'نوفمبر',
+    '12'=>'ديسمبر'
+];
 
 function arabicDate($date){
     $months = ['01'=>'يناير','02'=>'فبراير','03'=>'مارس','04'=>'أبريل','05'=>'مايو','06'=>'يونيو',
@@ -111,15 +123,12 @@ img.receipt-img{
 
 <div class="container mt-4">
 
-<!-- الترحيب -->
 <div class="d-flex justify-content-<?php echo preg_match('/[\x{0600}-\x{06FF}]/u',$name)?'start':'end'; ?>">
     <div id="welcome-text"><?php echo $welcome." ".$name; ?></div>
 </div>
 
-<!-- العنوان -->
 <h2 class="text-center mb-4">مصروفات الشهور السابقة</h2>
 
-<!-- الفلتر -->
 <form method="GET" class="filter-row align-items-center">
 
     <select name="year" class="form-select">
@@ -133,11 +142,13 @@ img.receipt-img{
 
     <select name="month" class="form-select">
         <option value="">كل الشهور</option>
-        <?php foreach($allMonths as $m){ ?>
-            <option value="<?php echo $m; ?>" <?php echo ($m==$selectedMonth)?'selected':''; ?>>
-                <?php echo arabicDate($m.'-01'); ?>
+
+        <?php foreach($allMonths as $key=>$label){ ?>
+            <option value="<?php echo $key; ?>" <?php echo ($key==$selectedMonth)?'selected':''; ?>>
+                <?php echo $label; ?>
             </option>
         <?php } ?>
+
     </select>
 
     <select name="category" class="form-select">
@@ -149,9 +160,8 @@ img.receipt-img{
         <?php } ?>
     </select>
 
-    <button class="btn btn-primary px-4">فلتر</button>
+    <button class="btn btn-primary px-4">عرض</button>
 
-    <!-- تصدير -->
     <div class="dropdown">
         <button class="btn btn-success dropdown-toggle px-3" type="button" data-bs-toggle="dropdown">
             تصدير
@@ -167,11 +177,7 @@ img.receipt-img{
 
 <?php 
 if(empty($expenses_by_year)){
-    $msg = "لا توجد مصروفات";
-    if($selectedCategory) $msg .= " لفئة " . ($categories[$selectedCategory]['label'] ?? $selectedCategory);
-    if($selectedYear) $msg .= " في سنة " . $selectedYear;
-    if($selectedMonth) $msg .= " في شهر " . arabicDate($selectedMonth.'-01');
-    echo "<div class='alert alert-warning'>$msg</div>";
+    echo "<div class='alert alert-warning'>لا توجد مصروفات</div>";
 }
 
 foreach($expenses_by_year as $year => $expenses){ 
@@ -230,8 +236,6 @@ foreach($expenses as $row){
 
 <script>
 function exportData(type){
-    if(!type) return;
-
     let url = "export_expenses.php?type=" + type +
     "&year=<?php echo $selectedYear; ?>" +
     "&month=<?php echo $selectedMonth; ?>" +

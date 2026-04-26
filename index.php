@@ -128,6 +128,9 @@ img.receipt-img{
     object-fit: cover;
     border-radius: 5px;
 }
+
+    filter: invert(1);
+
 </style>
 </head>
 <body>
@@ -156,8 +159,10 @@ $welcome = isArabic($name) ? "أهلا👋" : "👋Welcome";
     <div class="col-md-4">
         <input type="file" name="receipt" class="form-control">
     </div>
-    <div class="col-md-3">
-        <input type="date" name="date" class="form-control">
+    <div class="col-md-3 d-flex gap-1" dir="rtl">
+        <input type="text" name="date" class="form-control" placeholder="يوم" required>
+        <input type="text" name="month" class="form-control" placeholder="شهر" required>
+        <input type="text" name="year" class="form-control" placeholder="سنة" required>
     </div>
     <div class="col-md-2">
         <select name="category" class="form-select" required>
@@ -246,7 +251,7 @@ $welcome = isArabic($name) ? "أهلا👋" : "👋Welcome";
 
                           <div class="mb-2">
                             <label>التاريخ</label>
-                            <input type="date" name="edit_date" class="form-control" value="<?= $row['date'] ?>" required>
+                            <input[type="date"]{} name="edit_date" class="form-control" value="<?= $row['date'] ?>" required>
                           </div>
 
                           <div class="mb-2">
