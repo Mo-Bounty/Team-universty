@@ -31,6 +31,12 @@
         </li>
 
         <li class="nav-item">
+          <a class="nav-link" href="budget.php">
+            الميزانية
+          </a>
+        </li>
+
+        <li class="nav-item">
           <a class="nav-link" href="logout.php">تسجيل خروج</a>
         </li>
 

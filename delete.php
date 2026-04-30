@@ -3,7 +3,9 @@ include "db.php";
 
 $id = $_GET['id'];
 
-mysqli_query($conn, "DELETE FROM expenses WHERE id=$id");
+$stmt = $conn->prepare("DELETE FROM expenses WHERE id=?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
 
 header("Location: index.php");
 exit();

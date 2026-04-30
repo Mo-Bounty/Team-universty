@@ -11,10 +11,25 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $name = $_SESSION['name'];
 
+$budgetRow = mysqli_fetch_assoc(mysqli_query($conn,"SELECT budget FROM users WHERE id=$user_id"));
+$budget = $budgetRow['budget'] ?? 0;
+
+$totalRow = mysqli_fetch_assoc(mysqli_query($conn,"
+    SELECT SUM(amount) as total FROM expenses WHERE user_id=$user_id
+"));
+$total = $totalRow['total'] ?? 0;
+
+
+
 // --- إضافة مصروف مع إيصال ---
 if (isset($_POST['add'])) {
     $title = $_POST['title'];
     $amount = $_POST['amount'];
+
+if($amount <= 0){
+    echo "<div class='alert alert-danger'>المبلغ غير صحيح</div>";
+    return;
+}
     $date = !empty($_POST['date']) ? $_POST['date'] : date('Y-m-d');
     $category = $_POST['category'];
 
@@ -26,6 +41,8 @@ if (isset($_POST['add'])) {
 
     mysqli_query($conn,"INSERT INTO expenses (title, amount, date, user_id, category, receipt)
     VALUES ('$title','$amount','$date','$user_id','$category','$receipt_name')");
+    header("Location: index.php");
+    exit();
 }
 
 // --- تعديل مصروف + إيصال ---
@@ -65,7 +82,17 @@ if (isset($_GET['delete'])) {
 }
 
 // --- عرض المصروفات ---
-$result = mysqli_query($conn,"SELECT * FROM expenses WHERE user_id=$user_id ORDER BY date DESC");
+$search = $_GET['search'] ?? '';
+
+$query = "SELECT * FROM expenses WHERE user_id=$user_id";
+
+if($search){
+    $query .= " AND title LIKE '%$search%'";
+}
+
+$query .= " ORDER BY date DESC";
+
+$result = mysqli_query($conn,$query);
 
 // ترتيب البيانات حسب السنة
 $expenses_by_year = [];
@@ -73,10 +100,6 @@ while($row = mysqli_fetch_assoc($result)){
     $year = date('Y', strtotime($row['date']));
     $expenses_by_year[$year][] = $row;
 }
-
-// الإجمالي
-$totalRow = mysqli_fetch_assoc(mysqli_query($conn,"SELECT SUM(amount) as total FROM expenses WHERE user_id=$user_id"));
-$total = $totalRow['total'] ?? 0;
 
 function categoryArabic($cat){
     $map = [
@@ -146,24 +169,58 @@ $welcome = isArabic($name) ? "أهلا👋" : "👋Welcome";
 ?>
 <h2 class="text-center mb-4"><?php echo $welcome . " " . $name; ?></h2>
 
+<div class="alert alert-info">
+    الميزانية الشهرية: <?php echo $budget; ?> جنيه <br>
+    المصروف الحالي: <?php echo $total; ?> جنيه <br>
+
+    <?php if($budget > 0){ ?>
+        المتبقي: <?php echo $budget - $total; ?> جنيه
+    <?php } ?>
+</div>
+
+<?php
+if($budget > 0){
+    if($total >= $budget){
+        echo "<div class='alert alert-danger'>❌ لقد تجاوزت الميزانية!</div>";
+    }
+    elseif($total >= $budget * 0.8){
+        echo "<div class='alert alert-warning'>⚠️ أنت قربت تخلص الميزانية</div>";
+    }
+    else {
+        echo "<div class='alert alert-success'>👍 أنت في الأمان</div>";
+    }
+}
+?>
+
 <!-- إضافة مصروف -->
 <div class="card shadow p-3 mb-4">
 <h4>💰 إضافة مصروف</h4>
+
 <form method="POST" class="row g-2" enctype="multipart/form-data">
+
+    <!-- الميزانية -->
+
+    <!-- اسم المصروف -->
     <div class="col-md-4">
         <input type="text" name="title" class="form-control" placeholder="اسم المصروف" required>
     </div>
+
+    <!-- المبلغ -->
     <div class="col-md-2">
         <input type="number" step="0.01" name="amount" class="form-control" placeholder="المبلغ" required>
     </div>
+
+    <!-- الإيصال -->
     <div class="col-md-4">
         <input type="file" name="receipt" class="form-control">
     </div>
+
+    <!-- التاريخ -->
     <div class="col-md-3 d-flex gap-1" dir="rtl">
-        <input type="text" name="date" class="form-control" placeholder="يوم" required>
-        <input type="text" name="month" class="form-control" placeholder="شهر" required>
-        <input type="text" name="year" class="form-control" placeholder="سنة" required>
+        <input type="date" name="date" class="form-control" required>
     </div>
+
+    <!-- الفئة -->
     <div class="col-md-2">
         <select name="category" class="form-select" required>
             <option value="">-- اختر الفئة --</option>
@@ -175,11 +232,18 @@ $welcome = isArabic($name) ? "أهلا👋" : "👋Welcome";
             <option value="others">أخرى</option>
         </select>
     </div>
+
+    <!-- زر الإضافة -->
     <div class="col-12 text-end mt-2">
         <button name="add" class="btn btn-primary">إضافة</button>
     </div>
+
 </form>
 </div>
+
+<form method="GET" class="mb-3">
+    <input type="text" name="search" class="form-control" placeholder="ابحث عن مصروف">
+</form>
 
 <!-- عرض المصروفات حسب السنة + تلوين حسب الشهر -->
 <?php foreach($expenses_by_year as $year => $expenses): ?>
@@ -251,7 +315,7 @@ $welcome = isArabic($name) ? "أهلا👋" : "👋Welcome";
 
                           <div class="mb-2">
                             <label>التاريخ</label>
-                            <input[type="date"]{} name="edit_date" class="form-control" value="<?= $row['date'] ?>" required>
+                            <input type="date" name="edit_date" class="form-control" value="<?= $row['date'] ?>" required>
                           </div>
 
                           <div class="mb-2">

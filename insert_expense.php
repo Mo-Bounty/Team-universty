@@ -11,8 +11,14 @@ if (!isset($_SESSION['user_id'])) {
 // رفع الإيصال
 $receipt_name = null;
 if (isset($_FILES['receipt']) && $_FILES['receipt']['error'] == 0) {
-    $receipt_name = time() . "_" . $_FILES['receipt']['name']; // اسم فريد
-    move_uploaded_file($_FILES['receipt']['tmp_name'], "uploads/" . $receipt_name);
+
+    $allowed = ['jpg','jpeg','png'];
+    $ext = pathinfo($_FILES['receipt']['name'], PATHINFO_EXTENSION);
+
+    if(in_array($ext, $allowed)){
+        $receipt_name = time() . "_" . $_FILES['receipt']['name'];
+        move_uploaded_file($_FILES['receipt']['tmp_name'], "uploads/" . $receipt_name);
+    }
 }
 
 // بيانات الفورم
